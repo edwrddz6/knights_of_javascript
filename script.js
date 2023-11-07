@@ -53,7 +53,7 @@ function changePlayer() {
         return; 
     }
 
-    currentPlayerHealthNum = Number(currentPlayerHealth.innerHTML); // converts player's health from string (e.g. '89' from the innerHTML) into actual number variable that can be used using Number()
+    currentPlayerHealthNum = Number(currentPlayerHealth.textContent); // converts player's health from string (e.g. '89' from the innerHTML) into actual number variable that can be used using Number()
 
     // Instead of just having a predetermined damage number for all turns, I wrote a function that would generate a random damage number between 2 arguments
     function generateRandomDamage(min, max) {
@@ -250,3 +250,18 @@ function attackPlayerOne() {
         changePlayer();
     }
 }
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    document.body.classList.add("background");
+
+    const backImg = document.querySelector(`.background`);
+
+    backImg.style.backgroundImage = `url(https://i.postimg.cc/TYsmTm8Z/istockphoto-657520770-612x612.jpg)`;
+    backImg.style.backgroundSize = `cover`;
+    backImg.style.backgroundRepeat = `no-repeat`;
+    backImg.style.backgroundPosition = `center`;
+    backImg.style.maxWidth = `auto`;
+    backImg.style.height = `100%`;
+});
+
