@@ -9,11 +9,11 @@ let gameState = {
 
 // function that considers which player's turn it is and then
 // changes the UI accordingly
-function changePlayer() {
+/*function changePlayer() {
     // if the current player is player 1 at the end of a move
     if (gameState.whoseTurn === 1) {
         let playerTwoHealth = document.getElementById("playerTwoHealth");
-        // conversts the innerHTML from string to a number and stores it in a variable
+        // converts the innerHTML from string to a number and stores it in a variable
         let playerTwoHealthNum = Number(playerTwoHealth.innerHTML);
         // reduces by 10
         playerTwoHealthNum -= 10;
@@ -34,7 +34,52 @@ function changePlayer() {
             // grabs the 'playerName' element and changes the player's turn display
             let playerName = document.getElementById("playerName");
             playerName.innerHTML = `Player ${gameState.whoseTurn}`;
-        }
+    }
+        
+    }
+}*/
+
+// Instead of hard coding another IF statement for player 2, I decided to create a conditional to determine if it is player 1 or 2's turn
+function changePlayer() {
+    let currentPlayerHealth; // I created this variable was created to determine the current health of each player before a turn is taken
+    let currentPlayerHealthNum; // I created this variable to determine the health of each player after a turn. 
+
+    // the conditional was placed here. 
+    if (gameState.whoseTurn === 1) {
+        currentPlayerHealth = document.getElementById("playerOneHealth"); // this will retrieve the HTML element with id playerOneHealth and store it as a variable, resulting the HTML element displaying player 1's health
+    } else if (gameState.whoseTurn === 2) {
+        currentPlayerHealth = document.getElementById("playerTwoHealth"); // this will retrieve the HTML element with id playerOneHealth and store it as a variable, resulting the HTML element displaying player 2's health
+    } else {
+        return; 
+    }
+
+    currentPlayerHealthNum = Number(currentPlayerHealth.innerHTML); // converts player's health from string (e.g. '89' from the innerHTML) into actual number variable that can be used using Number()
+
+    // Instead of just having a predetermined damage number for all turns, I wrote a function that would generate a random damage number between 2 arguments
+    function generateRandomDamage(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min; // math.random returns floating number between 0 and 1. math.floor rounds down. the expression adds 1 to ensure maximum value is inclusive. min is added at the end because I want to ensure that the range always starts from min
+    }
+
+    const damageRange = generateRandomDamage(10, 20); // I wanted damage to be between 10 and 20. this will call function generateRandomDamage using 10 & 20 as arguments 
+    currentPlayerHealthNum -= damageRange; // uses the above binding to subtract players health
+
+    // if player health goes below zero, this will ensure that player health stops at 0 or will always become equal to 0
+    if (currentPlayerHealthNum <= 0) {
+        currentPlayerHealthNum = 0;
+    }
+
+    currentPlayerHealth.innerHTML = currentPlayerHealthNum; // updates players' health with appropriate health number after damage is taken
+
+    // once player health reaches 0, it will call on gameOver function; if not, the else statement asks whose turn was it and who is next
+    if (currentPlayerHealthNum <= 0) {
+        currentPlayerHealthNum = 0;
+        gameOver();
+    } else {
+        gameState.whoseTurn = gameState.whoseTurn === 1 ? 2 : 1; // used a ternary operator to determine whose turn is it. ? converts into a boolean and checks if it is true that it is player 1 turn, it will update to player 2. : says if player 1 is not in turn (false), then it will change to player 1's turn
+
+        // grabs the 'playerName' element and changes the player's turn display
+        let playerName = document.getElementById("playerName"); 
+        playerName.innerHTML = `Player ${gameState.whoseTurn}`;
     }
 }
 
@@ -129,19 +174,79 @@ function attackPlayerTwo() {
         changePlayer();
     }
 }
-
+// function that allows the player one attack button to reduce the player one's health
 function attackPlayerOne() {
-    if (gameState.whoseTurn === 2) {
-        let playerOneHealth = document.getElementById("playerOneHealth");
-        let playerOneHealthNum = Number(playerOneHealth.innerHTML);
-        playerOneHealthNum -= 10;
-        playerOneHealth.innerHTML = playerOneHealthNum;
+    // compartmentalized function that will switch the player 1 attack button to inactive
+    // and player 2 attack button to active using DOM manipulation
+    // this also DISABLES the button, meaning they are not interactable
+    function changeButtonStatus() {
+        let playerOneAttackButton = document.getElementById("playerOneAttack");
+        playerOneAttackButton.disabled = true;
+        playerOneAttackButton.classList.add("inactive");
+        playerOneAttackButton.classList.remove("active");
 
-        if (playerOneHealth <= 0) {
-            playerOneHealth = 0;
-            gameOver();
-        } else {
-            changePlayer();
+        let playerTwoAttackButton = document.getElementById("playerTwoAttack");
+        playerTwoAttackButton.disabled = false;
+        playerTwoAttackButton.classList.add("active");
+        playerTwoAttackButton.classList.remove("inactive");
+    }
+
+    // commpartmentalized function that changes the player 2's sprite using the array
+    // containing multiple images
+    function animatePlayer() {
+        // an array containing the images using in player two's animation
+        // the indices are later used to cycle / "animate" when the player attacks
+        let playerTwoFrames = [
+            "./images/L_Idle.png",
+            "./images/L_Attack.png"
+        ];
+
+        // removes the 'idle' class from the player sprite
+        let playerSprite = document.getElementById("playerTwoSprite");
+        // function we will call in setTimeout, before the frames change back
+        // the idle stance
+        // in other words, we set to the attack sprite, wait 3 seconds,
+        // then set it back to the idle sprite
+        playerSprite.src = playerTwoFrames[1];
+        
+
+        playerSprite.classList.remove("idle");
+
+        // ** CHECK THE CSS TO NOTE THE CHANGES MADE **
+        playerSprite.classList.add("attack");
+
+
+        let enemySprite = document.getElementById("playerOneSprite");
+        let enemyDamage = document.getElementById("SFX_PlayerDamage");
+
+        enemySprite.classList.remove("idle");
+
+        // ** CHECK THE CSS TO NOTE THE CHANGES MADE **
+        enemySprite.classList.add("damage");
+        // sound that plays when enemy takes damage
+        enemyDamage.play();
+
+        // the function we will call in the setTimeOut method below
+        // after 350 milliseconds
+        // this function will execute this block of code
+        function changePlayerTwoSprite() {
+            enemySprite.classList.remove("damage");
+            enemySprite.classList.add("idle");
+
+            playerSprite.src = playerTwoFrames[0];
+            playerSprite.classList.remove("attack");
+            playerSprite.classList.add("idle");
         }
+
+        setTimeout(changePlayerTwoSprite, 350);
+    }
+
+    // for easy reading,
+    // we do not include ALL of the above code within this condition
+    // instead, we create higher-order functions to keep the code neat and readable
+    if (gameState.whoseTurn === 2) {
+        animatePlayer();
+        changeButtonStatus();
+        changePlayer();
     }
 }
